@@ -1,13 +1,11 @@
 import asyncio
-import aiofiles
-from aiogram import Bot, Dispatcher, Router, types
-from aiogram.types import Message, FSInputFile
-from aiogram.filters import CommandStart
-
-from os import getenv, listdir
-import dotenv
-
 import random
+from os import getenv, listdir
+
+import dotenv
+from aiogram import Bot, Dispatcher
+from aiogram.filters import CommandStart
+from aiogram.types import Message, FSInputFile
 from pydub import AudioSegment
 
 dotenv.load_dotenv()
