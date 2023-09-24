@@ -4,7 +4,7 @@ from aiogram import Bot, Dispatcher, Router, types
 from aiogram.types import Message, FSInputFile
 from aiogram.filters import CommandStart
 
-from os import getenv
+from os import getenv, listdir
 import dotenv
 
 import random
@@ -17,20 +17,44 @@ TOKEN = getenv("BOT_TOKEN")
 dp = Dispatcher()
 bot = Bot(TOKEN)
 
+users = {}
+
+
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
     """
     This handler receives messages with `/start` command
     """
-    # song = FSInputFile("music/01_Imagine Dragons - Radioactive_Случайный трек.ogg")
-    # await bot.send_chat_action(message.from_user.id, "upload_voice")
-    # await bot.send_voice(message.from_user.id, song)
+    files = listdir("music")
+    random_song_number = random.randint(0, len(files) - 1)
+    song_name = files[random_song_number]
+
+    # save user in db
+    users[message.chat.id] = random_song_number
+
+    song = FSInputFile(f"music/{song_name}")
+    await bot.send_chat_action(message.from_user.id, "upload_voice")
+    await bot.send_voice(message.from_user.id, song)
+    await bot.send_message(message.from_user.id, "Напишите название исполнителя данной песни")
 
 
-    # with open(f"", 'rb') as audio_file:
-    #     await bot.send_audio(message.chat.id, audio=InputFile(audio_file))
+@dp.message()
+async def guess_song_handler(message: Message) -> None:
+    """
+    This handler check user answer
+    """
+    files = listdir("music")
+    chat_id = message.chat.id
 
-    await message.answer(f"Hello!")
+    if chat_id in users:
+        if message.text == files[users[chat_id]].split("-")[0].strip():
+            await bot.send_message(chat_id,
+                                   f"Угадали. Это была песня: {files[users[chat_id]][:-4]}.\nПропишите /start для начала новой игры")
+        else:
+            await bot.send_message(chat_id,
+                                   f"Не угадали. Это была песня: {files[users[chat_id]][:-4]}.\nПропишите /start для начала новой игры")
+    else:
+        await bot.send_message(chat_id, "Пропишите /start для начала игры")
 
 
 def extract_random_segment(input_file):
